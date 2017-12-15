@@ -1,9 +1,13 @@
 'use strict';
 /* global fecha, DocumentTouch */
 /* eslint-disable no-multi-assign */
+let idCounter = 0;
 
 export default class HotelDatepicker {
 	constructor(input, options) {
+		this._boundedEventHandlers = {};
+		this.id = HotelDatepicker.getNewId();
+
         // Set default values
 		const opts = options || {};
 
@@ -22,12 +26,15 @@ export default class HotelDatepicker {
 		this.animationSpeed = opts.animationSpeed || '.5s';
 		this.hoveringTooltip = opts.hoveringTooltip || true; // Or a function
 		this.autoClose = opts.autoClose === undefined ? true : opts.autoClose;
+		this.showTopbar = opts.showTopbar === undefined ? true : opts.showTopbar;
 		this.i18n = opts.i18n || {
 			selected: 'Your stay:',
 			night: 'Night',
 			nights: 'Nights',
 			button: 'Close',
-			'day-names': ['Sun', 'Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat'],
+			'day-names-short': ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+			'day-names': ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+			'month-names-short': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
 			'month-names': ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
 			'error-more': 'Date range should not be more than 1 night',
 			'error-more-plural': 'Date range should not be more than %d nights',
@@ -52,13 +59,52 @@ export default class HotelDatepicker {
 		this.init();
 	}
 
+	addBoundedListener(node, event, handler, capture) {
+		if (!(node in this._boundedEventHandlers)) {
+            // _boundedEventHandlers stores references to nodes
+			this._boundedEventHandlers[node] = {};
+		}
+		if (!(event in this._boundedEventHandlers[node])) {
+            // Each entry contains another entry for each event type
+			this._boundedEventHandlers[node][event] = [];
+		}
+        // Capture reference
+		const boundedHandler = handler.bind(this);
+		this._boundedEventHandlers[node][event].push([boundedHandler, capture]);
+		node.addEventListener(event, boundedHandler, capture);
+	}
+
+	removeAllBoundedListeners(node, event) {
+		if (node in this._boundedEventHandlers) {
+			const handlers = this._boundedEventHandlers[node];
+			if (event in handlers) {
+				const eventHandlers = handlers[event];
+				for (let i = eventHandlers.length; i--;) {
+					const handler = eventHandlers[i];
+					node.removeEventListener(event, handler[0], handler[1]);
+				}
+			}
+		}
+	}
+
+	static getNewId() {
+		return ++idCounter;
+	}
+
+	setFechaI18n() {
+		fecha.i18n.dayNamesShort = this.i18n['day-names-short'];
+		fecha.i18n.dayNames = this.i18n['day-names'];
+		fecha.i18n.monthNamesShort = this.i18n['month-names-short'];
+		fecha.i18n.monthNames = this.i18n['month-names'];
+	}
+
 	getWeekDayNames() {
 		let week = '';
 
         // Start from monday if we passed that option
 		if (this.startOfWeek === 'monday') {
 			for (let i = 0; i < 7; i++) {
-				week += '<th class="datepicker__week-name">' + this.lang('day-names')[(1 + i) % 7] + '</th>';
+				week += '<th class="datepicker__week-name">' + this.lang('day-names-short')[(1 + i) % 7] + '</th>';
 			}
 
 			return week;
@@ -66,7 +112,7 @@ export default class HotelDatepicker {
 
         // Otherwise start from sunday (default)
 		for (let i = 0; i < 7; i++) {
-			week += '<th class="datepicker__week-name">' + this.lang('day-names')[i] + '</th>';
+			week += '<th class="datepicker__week-name">' + this.lang('day-names-short')[i] + '</th>';
 		}
 
 		return week;
@@ -118,11 +164,13 @@ export default class HotelDatepicker {
 
 	getDateString(date, format = this.format) {
         // Format date
+		this.setFechaI18n();
 		return fecha.format(date, format);
 	}
 
 	parseDate(date, format = this.format) {
         // Parse a date object
+		this.setFechaI18n();
 		return fecha.parse(date, format);
 	}
 
@@ -181,7 +229,7 @@ export default class HotelDatepicker {
 		this.showMonth(defaultTime, 1);
 		this.showMonth(this.getNextMonth(defaultTime), 2);
 
-        // Print default info in top bar
+		// Print default info in top bar
 		this.topBarDefaultText();
 
         // Parse disabled dates
@@ -209,10 +257,12 @@ export default class HotelDatepicker {
 		}
 
         // Open the datepicker on the input click
-		this.input.addEventListener('click', evt => this.openDatepicker(evt));
+		this.addBoundedListener(this.input, 'click', evt => this.openDatepicker(evt));
 
-        // Close the datepicker on the button click
-		document.getElementById(this.getCloseButtonId()).addEventListener('click', evt => this.closeDatepicker(evt));
+		if (this.showTopbar) {
+			// Close the datepicker on the button click
+			document.getElementById(this.getCloseButtonId()).addEventListener('click', evt => this.closeDatepicker(evt));
+		}
 
         // Close the datepicker on resize?
         // The problem is that mobile keyboards trigger the resize event closing
@@ -220,37 +270,26 @@ export default class HotelDatepicker {
         // but for now I will disable this option. I'm open to new ideas.
         // window.addEventListener('resize', evt => this.closeDatepicker(evt));
 
-        // Add a click event listener to the document. This will help us to:
-        // 1 - Check if the click it's outside the datepicker
-        // 2 - Handle the click on calendar days
-		document.addEventListener('click', evt => this.documentClick(evt));
-
         // Add a mouseover event listener to the document. This will help us to:
         // 1 - Handle the hover on calendar days
-		document.addEventListener('mouseover', evt => this.documentHover(evt));
+		this.datepicker.addEventListener('mouseover', evt => this.datepickerHover(evt));
 
         // Add a mouseout event listener to the document. This will help us to:
         // 1 - Hide the tooltip on the mouseout event on days
-		document.addEventListener('mouseout', evt => this.documentMouseOut(evt));
+		this.datepicker.addEventListener('mouseout', evt => this.datepickerMouseOut(evt));
 
         // Update the selected values when the input changes manually
-		this.input.addEventListener('change', () => this.checkAndSetDefaultValue());
+		this.addBoundedListener(this.input, 'change', () => this.checkAndSetDefaultValue());
 	}
 
 	generateId() {
         // Generate an unique ID for each datepicker
-		let id = '';
-
         // Use input ID if set
 		if (this.input.id) {
-			id += this.input.id;
-        // Otherwise create a random string
-		} else {
-            // @todo - Is a date string unique enough?
-			id += Date.now();
+			return this.input.id;
+        // Otherwise get the instance id
 		}
-
-		return id;
+		return this.id;
 	}
 
 	createDom() {
@@ -269,16 +308,18 @@ export default class HotelDatepicker {
 
 		html += '<div class="datepicker__inner">';
 
-        // Top bar section
-		html += '<div class="datepicker__topbar">' +
-                    '<div class="datepicker__info datepicker__info--selected"><span class="datepicker__info datepicker__info--selected-label">' + this.lang('selected') + ' </span> <strong class="datepicker__info-text datepicker__info-text--start-day">...</strong>' +
-                        ' <span class="datepicker__info-text datepicker__info--separator">' + this.separator + '</span> <strong class="datepicker__info-text datepicker__info-text--end-day">...</strong> <em class="datepicker__info-text datepicker__info-text--selected-days">(<span></span>)</em>' +
-                    '</div>' +
+		if (this.showTopbar) {
+			// Top bar section
+			html += '<div class="datepicker__topbar">' +
+						'<div class="datepicker__info datepicker__info--selected"><span class="datepicker__info datepicker__info--selected-label">' + this.lang('selected') + ' </span> <strong class="datepicker__info-text datepicker__info-text--start-day">...</strong>' +
+							' <span class="datepicker__info-text datepicker__info--separator">' + this.separator + '</span> <strong class="datepicker__info-text datepicker__info-text--end-day">...</strong> <em class="datepicker__info-text datepicker__info-text--selected-days">(<span></span>)</em>' +
+						'</div>' +
 
-                    '<div class="datepicker__info datepicker__info--feedback"></div>' +
+						'<div class="datepicker__info datepicker__info--feedback"></div>' +
 
-                    '<button type="button" id="' + this.getCloseButtonId() + '" class="datepicker__close-button">' + this.lang('button') + '</button>' +
-                '</div>';
+						'<button type="button" id="' + this.getCloseButtonId() + '" class="datepicker__close-button">' + this.lang('button') + '</button>' +
+					'</div>';
+		}
 
         // Months section
 		html += '<div class="datepicker__months">';
@@ -460,6 +501,11 @@ export default class HotelDatepicker {
 
             // Disable (if needed) the prev/next buttons
 			this.disableNextPrevButtons();
+
+            // Add a click event listener to the document. This will help us to:
+            // 1 - Check if the click it's outside the datepicker
+            // 2 - Handle the click on calendar days
+			this.addBoundedListener(document, 'click', evt => this.documentClick(evt));
 		}
 	}
 
@@ -476,6 +522,8 @@ export default class HotelDatepicker {
         // Slide up the datepicker
 		this.slideUp(this.datepicker, this.animationSpeed);
 		this.isOpen = false;
+
+		this.removeAllBoundedListeners(document, 'click');
 	}
 
 	autoclose() {
@@ -495,14 +543,14 @@ export default class HotelDatepicker {
 		}
 	}
 
-	documentHover(evt) {
+	datepickerHover(evt) {
         // Check if the hover is on a calendar day
 		if (evt.target.tagName && evt.target.tagName.toLowerCase() === 'td') {
 			this.dayHovering(evt.target);
 		}
 	}
 
-	documentMouseOut(evt) {
+	datepickerMouseOut(evt) {
         // Check if the mouseout is on a calendar day
 		if (evt.target.tagName && evt.target.tagName.toLowerCase() === 'td') {
             // Hide the tooltip
@@ -533,7 +581,7 @@ export default class HotelDatepicker {
 			this.changed = false;
 			this.setDateRange(this.parseDate(dates[0], _format), this.parseDate(dates[1], _format));
 			this.changed = true;
-		} else {
+		} else if (this.showTopbar) {
 			const selectedInfo = this.datepicker.getElementsByClassName('datepicker__info--selected')[0];
 			selectedInfo.style.display = 'none';
 		}
@@ -600,7 +648,7 @@ export default class HotelDatepicker {
         // Check the selection
 		this.checkSelection();
 
-        // Show selected dates in top bar
+		// Show selected dates in top bar
 		this.showSelectedInfo();
 
         // Close the datepicker
@@ -647,6 +695,20 @@ export default class HotelDatepicker {
 	}
 
 	showSelectedInfo() {
+		// Return early if the top bar is disabled
+		if (!this.showTopbar) {
+			// If both dates are set, set the value of our input
+			if (this.start && this.end) {
+				const dateRangeValue = this.getDateString(new Date(this.start)) + this.separator + this.getDateString(new Date(this.end));
+
+				// Set input value
+				this.setValue(dateRangeValue, this.getDateString(new Date(this.start)), this.getDateString(new Date(this.end)));
+				this.changed = true;
+			}
+
+			return;
+		}
+
         // Show selected range in top bar
 		const selectedInfo = this.datepicker.getElementsByClassName('datepicker__info--selected')[0];
 		const elStart = selectedInfo.getElementsByClassName('datepicker__info-text--start-day')[0];
@@ -780,7 +842,7 @@ export default class HotelDatepicker {
 
 	checkSelection() {
 		const numberOfDays = Math.ceil((this.end - this.start) / 86400000) + 1;
-		const bar = this.datepicker.getElementsByClassName('datepicker__info--feedback')[0];
+		const bar = this.showTopbar ? this.datepicker.getElementsByClassName('datepicker__info--feedback')[0] : false;
 
 		if (this.maxDays && numberOfDays > this.maxDays) {
 			this.start = false;
@@ -794,9 +856,11 @@ export default class HotelDatepicker {
 				this.removeClass(days[i], 'datepicker__month-day--last-day-selected');
 			}
 
-            // Show error in top bar
-			const errorValue = this.maxDays - 1;
-			this.topBarErrorText(bar, 'error-more', errorValue);
+			if (this.showTopbar) {
+				// Show error in top bar
+				const errorValue = this.maxDays - 1;
+				this.topBarErrorText(bar, 'error-more', errorValue);
+			}
 		} else if (this.minDays && numberOfDays < this.minDays) {
 			this.start = false;
 			this.end = false;
@@ -809,15 +873,19 @@ export default class HotelDatepicker {
 				this.removeClass(days[i], 'datepicker__month-day--last-day-selected');
 			}
 
-            // Show error in top bar
-			const errorValue = this.minDays - 1;
-			this.topBarErrorText(bar, 'error-less', errorValue);
+			if (this.showTopbar) {
+				// Show error in top bar
+				const errorValue = this.minDays - 1;
+				this.topBarErrorText(bar, 'error-less', errorValue);
+			}
 		} else if (this.start || this.end) {
-            // Remove error and help classes from top bar
-			this.removeClass(bar, 'datepicker__info--error');
-			this.removeClass(bar, 'datepicker__info--help');
-		} else {
-            // Show help message
+			if (this.showTopbar) {
+				// Remove error and help classes from top bar
+				this.removeClass(bar, 'datepicker__info--error');
+				this.removeClass(bar, 'datepicker__info--help');
+			}
+		} else if (this.showTopbar) {
+			// Show help message
 			this.removeClass(bar, 'datepicker__info--error');
 			this.addClass(bar, 'datepicker__info--help');
 		}
@@ -990,6 +1058,11 @@ export default class HotelDatepicker {
 	}
 
 	topBarDefaultText() {
+		// Return early if the top bar is disabled
+		if (!this.showTopbar) {
+			return;
+		}
+
         // Show help message on top bar
 		let topBarText = '';
 
@@ -1011,6 +1084,10 @@ export default class HotelDatepicker {
 	}
 
 	topBarErrorText(bar, errorText, errorValue) {
+		if (!this.showTopbar) {
+			return;
+		}
+
         // Show error message on top bar
 		this.addClass(bar, 'datepicker__info--error');
 		this.removeClass(bar, 'datepicker__info--help');
@@ -1056,6 +1133,13 @@ export default class HotelDatepicker {
 						this.removeClass(days[i], 'datepicker__month-day--valid');
 					}
 				}
+			// At the end of the selection, restore the disabled/invalid class for
+			// days where the checkout is enabled. We need to check this when the
+			// autoclose option is false
+			} else if (this.hasClass(days[i], 'datepicker__month-day--checkout-enabled')) {
+				this.addClass(days[i], 'datepicker__month-day--invalid');
+				this.removeClass(days[i], 'datepicker__month-day--valid');
+				this.addClass(days[i], 'datepicker__month-day--disabled');
 			}
 		}
 
@@ -1171,7 +1255,7 @@ export default class HotelDatepicker {
 	parseDisabledDates() {
         // Sort disabled dates and store it in property
 		const _tmp = [];
-
+		this.setFechaI18n();
 		for (let i = 0; i < this.disabledDates.length; i++) {
 			_tmp[i] = fecha.parse(this.disabledDates[i], 'YYYY-MM-DD');
 		}
@@ -1374,5 +1458,14 @@ export default class HotelDatepicker {
 		}
 
 		return count;
+	}
+
+	destroy() {
+		if (document.getElementById(this.getDatepickerId())) {
+			this.removeAllBoundedListeners(this.input, 'click');
+			this.removeAllBoundedListeners(document, 'click');
+			this.removeAllBoundedListeners(this.input, 'change');
+			this.datepicker.parentNode.removeChild(this.datepicker);
+		}
 	}
 }
