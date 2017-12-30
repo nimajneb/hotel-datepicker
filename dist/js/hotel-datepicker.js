@@ -1,6 +1,9 @@
-/*! hotel-datepicker 3.0.1 - Copyright 2017 Benito Lopez (http://lopezb.com) - https://github.com/benitolopez/hotel-datepicker - MIT */
-var HotelDatepicker = (function () {
-'use strict';
+/*! hotel-datepicker 3.0.2 - Copyright 2017 Benito Lopez (http://lopezb.com) - https://github.com/benitolopez/hotel-datepicker - MIT */
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+	typeof define === 'function' && define.amd ? define(factory) :
+	(global.HotelDatepicker = factory());
+}(this, (function () { 'use strict';
 
 /* global fecha, DocumentTouch */
 /* eslint-disable no-multi-assign */
@@ -1503,4 +1506,4 @@ HotelDatepicker.prototype.destroy = function destroy () {
 
 return HotelDatepicker;
 
-}());
+})));

@@ -12,7 +12,7 @@ rollup.rollup({
 	plugins: [buble(), filesize()]
 }).then(bundle =>
 	bundle.write({
-		format: 'iife',
+		format: 'umd',
 		moduleName: 'HotelDatepicker',
 		banner,
 		dest: 'dist/js/hotel-datepicker.js'
@@ -37,7 +37,7 @@ rollup.rollup({
 	]
 }).then(bundle =>
 	bundle.write({
-		format: 'iife',
+		format: 'umd',
 		moduleName: 'HotelDatepicker',
 		banner,
 		dest: 'dist/js/hotel-datepicker.min.js'
