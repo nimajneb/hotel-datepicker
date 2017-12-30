@@ -9,14 +9,19 @@ const banner = `/*! ${packageInfo.name} ${packageInfo.version} - Copyright 2017 
 
 rollup.rollup({
 	entry: 'src/js/hotel-datepicker.js',
-	plugins: [buble(), filesize()]
+	plugins: [buble(), filesize()],
+	external: [
+		'fecha'
+	]
 }).then(bundle =>
 	bundle.write({
 		format: 'umd',
 		moduleName: 'HotelDatepicker',
 		banner,
-		dest: 'dist/js/hotel-datepicker.js'
-
+		dest: 'dist/js/hotel-datepicker.js',
+		globals: {
+			fecha: 'fecha'
+		}
 	})
 ).catch(console.error);
 
@@ -34,13 +39,18 @@ rollup.rollup({
 			}
 		}),
 		filesize()
+	],
+	external: [
+		'fecha'
 	]
 }).then(bundle =>
 	bundle.write({
 		format: 'umd',
 		moduleName: 'HotelDatepicker',
 		banner,
-		dest: 'dist/js/hotel-datepicker.min.js'
-
+		dest: 'dist/js/hotel-datepicker.min.js',
+		globals: {
+			fecha: 'fecha'
+		}
 	})
 ).catch(console.error);

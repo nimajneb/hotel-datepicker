@@ -1,4 +1,6 @@
 'use strict';
+
+import fecha from 'fecha';
 /* global fecha, DocumentTouch */
 /* eslint-disable no-multi-assign */
 let idCounter = 0;

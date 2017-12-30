@@ -1,9 +1,11 @@
 /*! hotel-datepicker 3.0.2 - Copyright 2017 Benito Lopez (http://lopezb.com) - https://github.com/benitolopez/hotel-datepicker - MIT */
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-	typeof define === 'function' && define.amd ? define(factory) :
-	(global.HotelDatepicker = factory());
-}(this, (function () { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('fecha')) :
+	typeof define === 'function' && define.amd ? define(['fecha'], factory) :
+	(global.HotelDatepicker = factory(global.fecha));
+}(this, (function (fecha) { 'use strict';
+
+fecha = fecha && fecha.hasOwnProperty('default') ? fecha['default'] : fecha;
 
 /* global fecha, DocumentTouch */
 /* eslint-disable no-multi-assign */
