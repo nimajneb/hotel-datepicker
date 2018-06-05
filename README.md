@@ -107,7 +107,32 @@ An array of **strings** in this format: `'YYYY-MM-DD'` (note the `''`). All the 
 - Type: `Boolean`
 - Default: `false`
 
-If `true`, allows the checkout on a disabled date. But with a criteria. Let's say we have these disabled dates: `03 April 2020` and `04 April 2020`. With this option enabled, an user can still select the first date (`03 April 2020`) for the checkout. But not `04 April 2020`.
+If `true`, allows the checkout on a **disabled** date. But with a criteria. Let's say we have these disabled dates: `03 April 2020` and `04 April 2020`. With this option enabled, an user can still select the first date (`03 April 2020`) for the checkout. But not `04 April 2020`.
+
+### noCheckInDates
+
+- Type: `Array`
+- Default: `[]`
+
+An array of **strings** in this format: `'YYYY-MM-DD'` (note the `''`). All the dates passed to the list will not allow a check-in on that day.
+
+### noCheckOutDates
+
+- Type: `Array`
+- Default: `[]`
+
+An array of **strings** in this format: `'YYYY-MM-DD'` (note the `''`). All the dates passed to the list will not allow a check-out on that day.
+
+### disabledDaysOfWeek
+
+- Type: `Array`
+- Default: `[]`
+
+An array of **strings** in English: `'Monday'` (note the `''` and the uppercase).
+
+```js
+['Monday', 'Tuesday', 'Wednesday']
+```
 
 ### container
 
@@ -150,6 +175,52 @@ Show/hide the toolbar.
 
 Close the datepicker after the selection of the second date.
 
+### moveBothMonths
+
+- Type: `Boolean`
+- Default: `false`
+
+Move both months when clicking on the next/prev month button.
+
+### onDayClick
+
+- Type: `Function`
+- Default: `false`
+
+Run a custom function every time a day is clicked:
+
+```js
+onDayClick: function() {
+    console.log('Day clicked!');
+}
+```
+
+### onOpenDatepicker
+
+- Type: `Function`
+- Default: `false`
+
+Run a custom function when the datepicker is opened:
+
+```js
+onOpenDatepicker: function() {
+    console.log('Datepicker opened!');
+}
+```
+
+### onSelectRange
+
+- Type: `Function`
+- Default: `false`
+
+Run a custom function when the datepicker is opened:
+
+```js
+onSelectRange: function() {
+    console.log('Date range selected!');
+}
+```
+
 ### i18n
 
 **[BREAK CHANGE]** Two new options has been introduced in the v.3: `month-names-short` and `day-names-short`. Previously, the *short* day name version ('Sun', 'Mon', 'Tue', etc) was used in the `day-names` option. Now, the `day-names` option uses the *long* version.
@@ -164,6 +235,8 @@ i18n: {
     night: 'Night',
     nights: 'Nights',
     button: 'Close',
+    'checkin-disabled': 'Check-in disabled',
+    'checkout-disabled': 'Check-out disabled',
     'day-names-short': ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     'day-names': ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
     'month-names-short': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -172,8 +245,8 @@ i18n: {
     'error-more-plural': 'Date range should not be more than %d nights',
     'error-less': 'Date range should not be less than 1 night',
     'error-less-plural': 'Date range should not be less than %d nights',
-    'info-more': 'Please select a date range longer than 1 night',
-    'info-more-plural': 'Please select a date range longer than %d nights',
+    'info-more': 'Please select a date range of at least 1 night',
+    'info-more-plural': 'Please select a date range of at least %d nights',
     'info-range': 'Please select a date range between %d and %d nights',
     'info-default': 'Please select a date range'
 }
@@ -218,6 +291,20 @@ Gets the number of nights selected. Returns `0` otherwise.
 ### destroy()
 
 Destroys the datepicker.
+
+## Events
+
+### afterClose
+
+You can list for this event when the datepicker closes.
+
+```js
+var input = document.getElementById('input-id');
+
+input.addEventListener('afterClose', function () {
+    console.log('Closed!');
+}, false);
+```
 
 ## Versioning
 
