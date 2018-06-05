@@ -1,4 +1,4 @@
-/*! hotel-datepicker 3.2.0 - Copyright 2017 Benito Lopez (http://lopezb.com) - https://github.com/benitolopez/hotel-datepicker - MIT */
+/*! hotel-datepicker 3.6.0 - Copyright 2017 Benito Lopez (http://lopezb.com) - https://github.com/benitolopez/hotel-datepicker - MIT */
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('fecha')) :
 	typeof define === 'function' && define.amd ? define(['fecha'], factory) :
@@ -30,6 +30,7 @@ var HotelDatepicker = function HotelDatepicker(input, options) {
 	this.disabledDates = opts.disabledDates || [];
 	this.noCheckInDates = opts.noCheckInDates || [];
 	this.noCheckOutDates = opts.noCheckOutDates || [];
+	this.disabledDaysOfWeek = opts.disabledDaysOfWeek || [];
 	this.enableCheckout = opts.enableCheckout || false;
 	this.container = opts.container || '';
 	this.animationSpeed = opts.animationSpeed || '.5s';
@@ -52,8 +53,8 @@ var HotelDatepicker = function HotelDatepicker(input, options) {
 		'error-more-plural': 'Date range should not be more than %d nights',
 		'error-less': 'Date range should not be less than 1 night',
 		'error-less-plural': 'Date range should not be less than %d nights',
-		'info-more': 'Please select a date range longer than 1 night',
-		'info-more-plural': 'Please select a date range longer than %d nights',
+		'info-more': 'Please select a date range of at least 1 night',
+		'info-more-plural': 'Please select a date range of at least %d nights',
 		'info-range': 'Please select a date range between %d and %d nights',
 		'info-default': 'Please select a date range'
 	};
@@ -65,6 +66,7 @@ var HotelDatepicker = function HotelDatepicker(input, options) {
 	};
 	this.onDayClick = opts.onDayClick === undefined ? false : opts.onDayClick;
 	this.onOpenDatepicker = opts.onOpenDatepicker === undefined ? false : opts.onOpenDatepicker;
+	this.onSelectRange = opts.onSelectRange === undefined ? false : opts.onSelectRange;
 
         // DOM input
 	this.input = input;
@@ -477,6 +479,7 @@ HotelDatepicker.prototype.createMonthDomString = function createMonthDomString (
 			var isDisabled = false;
 			var isNoCheckIn = false;
 			var isNoCheckOut = false;
+			var isDayOfWeekDisabled = false;
 
                 // Check if the day is one of the days passed in the
                 // (optional) disabledDates option. And set valid to
@@ -493,6 +496,13 @@ HotelDatepicker.prototype.createMonthDomString = function createMonthDomString (
 						flag++;
 					} else {
 						flag = 0;
+					}
+				}
+
+				if (this$1.disabledDaysOfWeek.length > 0) {
+					if (this$1.disabledDaysOfWeek.indexOf(fecha.format(_day$2.time, 'dddd')) > -1) {
+						_day$2.valid = false;
+						isDayOfWeekDisabled = true;
 					}
 				}
 
@@ -516,7 +526,8 @@ HotelDatepicker.prototype.createMonthDomString = function createMonthDomString (
 				isDisabled ? 'datepicker__month-day--disabled' : '',
 				isDisabled && this$1.enableCheckout && (flag === 1) ? 'datepicker__month-day--checkout-enabled' : '',
 				isNoCheckIn ? 'datepicker__month-day--no-check-in' : '',
-				isNoCheckOut ? 'datepicker__month-day--no-check-out' : ''
+				isNoCheckOut ? 'datepicker__month-day--no-check-out' : '',
+				isDayOfWeekDisabled ? 'datepicker__month-day--day-of-week-disabled' : ''
 			];
 
 			// Add a title for those days where the checkin or checkout is disabled
@@ -604,6 +615,11 @@ HotelDatepicker.prototype.closeDatepicker = function closeDatepicker () {
         // Slide up the datepicker
 	this.slideUp(this.datepicker, this.animationSpeed);
 	this.isOpen = false;
+
+	// Create event on close
+	var evt = document.createEvent('Event');
+	evt.initEvent('afterClose', true, true);
+	this.input.dispatchEvent(evt);
 
 	this.removeAllBoundedListeners(document, 'click');
 };
@@ -903,6 +919,11 @@ HotelDatepicker.prototype.dayClicked = function dayClicked (day) {
 	if (this.onDayClick) {
 		this.onDayClick();
 	}
+
+        // Optionally run a function when a range is selected
+	if (this.end && this.onSelectRange) {
+		this.onSelectRange();
+	}
 };
 
 HotelDatepicker.prototype.isValidDate = function isValidDate (time) {
@@ -916,7 +937,7 @@ HotelDatepicker.prototype.isValidDate = function isValidDate (time) {
         // Update valid dates during the selection
 	if (this.start && !this.end) {
             // Check maximum/minimum days
-		if ((this.maxDays > 0 && this.countDays(time, this.start) > this.maxDays) || (this.minDays > 0 && this.countDays(time, this.start) < this.minDays)) {
+		if ((this.maxDays > 0 && this.countDays(time, this.start) > this.maxDays) || (this.minDays > 0 && this.countDays(time, this.start) > 1 && this.countDays(time, this.start) < this.minDays)) {
 			return false;
 		}
 

@@ -123,6 +123,17 @@ An array of **strings** in this format: `'YYYY-MM-DD'` (note the `''`). All the 
 
 An array of **strings** in this format: `'YYYY-MM-DD'` (note the `''`). All the dates passed to the list will not allow a check-out on that day.
 
+### disabledDaysOfWeek
+
+- Type: `Array`
+- Default: `[]`
+
+An array of **strings** in English: `'Monday'` (note the `''` and the uppercase).
+
+```js
+['Monday', 'Tuesday', 'Wednesday']
+```
+
 ### container
 
 - Type: `Element`
@@ -176,7 +187,7 @@ Move both months when clicking on the next/prev month button.
 - Type: `Function`
 - Default: `false`
 
-Run a cutom function every time a day is clicked:
+Run a custom function every time a day is clicked:
 
 ```js
 onDayClick: function() {
@@ -189,11 +200,24 @@ onDayClick: function() {
 - Type: `Function`
 - Default: `false`
 
-Run a cutom function when the datepicker is opened:
+Run a custom function when the datepicker is opened:
 
 ```js
 onOpenDatepicker: function() {
     console.log('Datepicker opened!');
+}
+```
+
+### onSelectRange
+
+- Type: `Function`
+- Default: `false`
+
+Run a custom function when the datepicker is opened:
+
+```js
+onSelectRange: function() {
+    console.log('Date range selected!');
 }
 ```
 
@@ -221,8 +245,8 @@ i18n: {
     'error-more-plural': 'Date range should not be more than %d nights',
     'error-less': 'Date range should not be less than 1 night',
     'error-less-plural': 'Date range should not be less than %d nights',
-    'info-more': 'Please select a date range longer than 1 night',
-    'info-more-plural': 'Please select a date range longer than %d nights',
+    'info-more': 'Please select a date range of at least 1 night',
+    'info-more-plural': 'Please select a date range of at least %d nights',
     'info-range': 'Please select a date range between %d and %d nights',
     'info-default': 'Please select a date range'
 }
@@ -267,6 +291,20 @@ Gets the number of nights selected. Returns `0` otherwise.
 ### destroy()
 
 Destroys the datepicker.
+
+## Events
+
+### afterClose
+
+You can list for this event when the datepicker closes.
+
+```js
+var input = document.getElementById('input-id');
+
+input.addEventListener('afterClose', function () {
+    console.log('Closed!');
+}, false);
+```
 
 ## Versioning
 

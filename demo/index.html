@@ -29,7 +29,7 @@
 	<h1>Hotel Datepicker</h1>
 	<p>A pure Javascript date range picker for hotels.</p>
 
-	<a class="button button--download" href="https://github.com/benitolopez/hotel-datepicker/archive/2.0.1.zip">Download</a>
+	<a class="button button--download" href="https://github.com/benitolopez/hotel-datepicker/archive/3.5.0.zip">Download</a>
 
 	<ul class="social">
 		<li class="social__item"><a class="social__link" href="https://github.com/benitolopez/hotel-datepicker">View on Github</a></li>
@@ -148,6 +148,22 @@ var input = document.getElementById('input-id');
 var datepicker = new HotelDatepicker(input, {
     minNights: 4,
     maxNights: 8
+});
+				</pre>
+			</div>
+		</div>
+
+		<div class="demo__item">
+			<div class="demo__input">
+				<input type="text" id="demo20" value="">
+			</div>
+			<p class="demo__description">Disable specific days of weeks</p>
+			<div class="demo__config">
+				<pre>
+var input = document.getElementById('input-id');
+var datepicker = new HotelDatepicker(input, {
+    minNights: 6,
+    disabledDaysOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
 });
 				</pre>
 			</div>
@@ -320,6 +336,60 @@ var datepicker = new HotelDatepicker(input, {
 var input = document.getElementById('input-id');
 var datepicker = new HotelDatepicker(input, {
     moveBothMonths: true
+});
+				</pre>
+			</div>
+		</div>
+
+		<div class="demo__item">
+			<div class="demo__input">
+				<input type="text" id="demo19" value="">
+			</div>
+			<p class="demo__description">Run a function when the datepicker closes.</p>
+			<div class="demo__config">
+				<pre>
+var input = document.getElementById('input-id');
+
+input.addEventListener('afterClose', function () {
+    console.log('Closed!');
+}, false);
+				</pre>
+			</div>
+		</div>
+
+		<div class="demo__item">
+			<div class="demo__input">
+				<input type="text" id="demo22" value="">
+				<button type="button" id="open-datepicker" class="button">Open</button>
+			</div>
+			<p class="demo__description">Click the button to open the datepicker</p>
+			<div class="demo__config">
+				<pre>
+var datepicker = new HotelDatepicker(document.getElementById('input-id'));
+var open_datepicker_button = document.getElementById('open-datepicker');
+
+open_datepicker_button.addEventListener('click', open_datepicker_function);
+
+function open_datepicker_function() {
+	console.log('Open!');
+	datepicker.open();
+}
+				</pre>
+			</div>
+		</div>
+
+		<div class="demo__item">
+			<div class="demo__input">
+				<input type="text" id="demo23" value="">
+			</div>
+			<p class="demo__description">Run a custom function when a date range is selected</p>
+			<div class="demo__config">
+				<pre>
+var input = document.getElementById('input-id');
+var datepicker = new HotelDatepicker(input, {
+    onSelectRange: function() {
+		console.log('Date rage selected!')
+	}
 });
 				</pre>
 			</div>
@@ -505,8 +575,8 @@ var datepicker = new HotelDatepicker(input, {
 					'error-more-plural': 'L\'intervallo di date non deve avere più di %d notti',
 					'error-less': 'L\'intervallo di date non deve avere meno di 1 notte',
 					'error-less-plural': 'L\'intervallo di date non deve avere meno di %d notti',
-					'info-more': 'Per favore seleziona un intervallo di date maggiore di 1 notte',
-					'info-more-plural': 'Per favore seleziona un intervallo di date maggiore di %d notti',
+					'info-more': 'Per favore seleziona un intervallo di date di almeno 1 notte',
+					'info-more-plural': 'Per favore seleziona un intervallo di date di almeno %d notti',
 					'info-range': 'Per favore seleziona un intervallo di date tra %d e %d notti',
 					'info-default': 'Per favore seleziona un intervallo di date'
 				}
@@ -573,6 +643,42 @@ var datepicker = new HotelDatepicker(input, {
 
 			var demo18 = new HotelDatepicker(document.getElementById('demo18'), {
 				moveBothMonths: true
+			});
+
+			// ------------------- DEMO 19 ------------------ //
+
+			var input19 = document.getElementById('demo19');
+			var demo19 = new HotelDatepicker(input19);
+
+			input19.addEventListener('afterClose', function () {
+			    console.log('Closed!');
+			}, false);
+
+			// ------------------- DEMO 20 ------------------ //
+
+			var demo20 = new HotelDatepicker(document.getElementById('demo20'), {
+				minNights: 6,
+				disabledDaysOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+			});
+
+			// ------------------- DEMO 22 ------------------- //
+
+			var demo22 = new HotelDatepicker(document.getElementById('demo22'));
+			var open_datepicker_button = document.getElementById('open-datepicker');
+
+			open_datepicker_button.addEventListener('click', open_datepicker_function);
+
+			function open_datepicker_function() {
+				console.log('Open!');
+				demo22.open();
+			}
+
+			// ------------------- DEMO 23 ------------------- //
+
+			var demo23 = new HotelDatepicker(document.getElementById('demo23'), {
+				onSelectRange: function() {
+					console.log('Date rage selected!')
+				}
 			});
 		})();
 	</script>
